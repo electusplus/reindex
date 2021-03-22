@@ -1,0 +1,162 @@
+package com.electusplus.reindex.elasticsearch;
+
+import com.electusplus.reindex.exceptions.ClusterConnectionException;
+import com.electusplus.reindex.project_settings.EsSettings;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.http.util.EntityUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.ElasticsearchStatusException;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.*;
+import org.elasticsearch.client.core.CountRequest;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.metrics.Max;
+import org.elasticsearch.search.aggregations.metrics.MaxAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.Min;
+import org.elasticsearch.search.aggregations.metrics.MinAggregationBuilder;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+
+public class ElasticsearchController {
+    private static final Logger logger = LogManager.getLogger();
+    private final ObjectMapper mapper = new ObjectMapper();
+
+    private final ElasticsearchDbProvider elasticsearchClient = new ElasticsearchDbProvider();
+
+    public long getIndexDocsCount(final EsSettings connectionSettings, final String projectId, final String index) throws ClusterConnectionException {
+        RestHighLevelClient client = elasticsearchClient.getHighLevelClient(connectionSettings, projectId);
+        CountRequest countRequest = new CountRequest(index);
+        try {
+            return client
+                    .count(countRequest, RequestOptions.DEFAULT).getCount();
+        } catch (IOException | ElasticsearchStatusException e) {
+            logger.error(e);
+            return 0;
+        }
+    }
+    public String getTemplateParameters(final EsSettings connectionSettings, final String template, final String projectId) throws ClusterConnectionException {
+        RestClient client = elasticsearchClient.getLowLevelClient(connectionSettings, projectId);
+        Response response;
+        try {
+            response = client.performRequest(new Request("GET", "_template/" + template));
+            if (response.getStatusLine().getStatusCode() == 200) {
+                // parse the JSON response
+                return EntityUtils.toString(response.getEntity());
+            } else {
+                logger.error("There is the error in the get index parameters of index: " + template);
+            }
+        } catch (IOException e) {
+            logger.error(e);
+            return String.valueOf(e);
+        }
+        return null;
+    }
+    public String getIndexParameters(final EsSettings connectionSettings, final String index, final String projectId) throws ClusterConnectionException {
+        RestClient client = elasticsearchClient.getLowLevelClient(connectionSettings, projectId);
+        Response response;
+        try {
+            response = client.performRequest(new Request("GET", index));
+            if (response.getStatusLine().getStatusCode() == 200) {
+                // parse the JSON response
+                return EntityUtils.toString(response.getEntity());
+            } else {
+                logger.error("There is the error in the get index parameters of index: " + index);
+            }
+        } catch (IOException e) {
+            logger.error(e);
+            return String.valueOf(e);
+        }
+        return null;
+    }
+
+    public List<HashMap<String, String>> getIndexList(final EsSettings connectionSettings, final String projectId) {
+        return getTemplateOrIndexList(connectionSettings, "/_cat/indices?h=index&format=json", projectId);
+    }
+
+
+    public List<HashMap<String, String>> getTemplateList(final EsSettings connectionSettings, final String projectId) {
+        return getTemplateOrIndexList(connectionSettings, "/_cat/templates?h=name&format=json", projectId);
+    }
+
+    //TODO add catch exception
+    private List<HashMap<String, String>> getTemplateOrIndexList(final EsSettings connectionSettings, final String endPoint, final String projectId) {
+        Response response;
+        try {
+            RestClient client = elasticsearchClient.getLowLevelClient(connectionSettings, projectId);
+            response = client.performRequest(new Request("GET", endPoint));
+            if (response.getStatusLine().getStatusCode() == 200) {
+                // parse the JSON response
+                String rawBody = EntityUtils.toString(response.getEntity());
+                TypeReference<List<HashMap<String, String>>> typeRef = new TypeReference<List<HashMap<String, String>>>() {
+                };
+                return mapper.readValue(rawBody, typeRef);
+            }
+        } catch (IOException | ClusterConnectionException e) {
+            logger.error(e.getMessage());
+//            e.printStackTrace();
+        }
+        return new LinkedList<>();
+    }
+
+    public String getClusterStatus(final EsSettings connectionSettings, final String projectId) throws Exception {
+        RestHighLevelClient client = elasticsearchClient.getHighLevelClient(connectionSettings, projectId);
+        try {
+            ClusterHealthRequest request = new ClusterHealthRequest();
+            request.timeout("30s");
+            ClusterHealthResponse response = client.cluster().health(request, RequestOptions.DEFAULT);
+            return response.getStatus().toString();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            try {
+                if (client != null) {
+                    client.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public DataPeriodFromEs getStartAndEndDateOfIndex(final RestHighLevelClient client,
+                                                      final String index, final String dateField) {
+        SearchRequest searchRequest = new SearchRequest();
+        searchRequest.indices(index);
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        MaxAggregationBuilder maxAggregation = AggregationBuilders.max("max").field(dateField);
+        MinAggregationBuilder minAggregation = AggregationBuilders.min("min").field(dateField);
+        searchSourceBuilder.aggregation(maxAggregation);
+        searchSourceBuilder.aggregation(minAggregation);
+        searchSourceBuilder.size(0);
+        searchRequest.source(searchSourceBuilder);
+        try {
+            SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+            Aggregations aggregations = searchResponse.getAggregations();
+            Min min = aggregations.get("min");
+            Max max = aggregations.get("max");
+
+            return new DataPeriodFromEs(
+                    new Double(min.getValue()).longValue(),
+                    new Double(max.getValue()).longValue()
+            );
+        } catch (IOException | ElasticsearchException e) {
+//            e.printStackTrace();
+            logger.error(e);
+            //TODO add index is empty exception
+            return new DataPeriodFromEs(-1, -1);
+        }
+    }
+
+
+}

@@ -1,0 +1,72 @@
+{
+  "project_name": "",
+  "project_id": "",
+  "connection_settings": {
+    "source": {
+      "es_host": "",
+      "authentication_enabled": false,
+      "username": "",
+      "password": "",
+      "ssl_enabled": false,
+      "ssl_file": "",
+      "status": "UNTESTED"
+    },
+    "destination": {
+      "es_host": "",
+      "authentication_enabled": false,
+      "username": "",
+      "password": "",
+      "ssl_enabled": false,
+      "ssl_file": "",
+      "status": "UNTESTED"
+    }
+  },
+  "source_index_list": [
+
+  ],
+  "source_template_list": [
+
+  ],
+  "reindex_settings": {
+    "is_merge_to_one_index": false,
+    "merge_to_one_index_index_name": "",
+    "is_send_to_alias": false,
+    "send_to_alias_alias": "",
+    "is_send_to_rollover_alias": false,
+    "send_to_rollover_alias_alias": "",
+    "is_associate_with_ilm_policy": false,
+    "associate_with_ilm_policy_policy_name": "",
+    "is_create_first_index_of_rollover": false,
+    "create_first_index_of_rollover_index_name": "",
+    "is_send_to_pipeline" : false,
+    "send_to_pipeline_pipeline_name" : "",
+    "is_add_prefix": false,
+    "add_prefix_prefix": "",
+    "is_add_suffix": false,
+    "add_suffix_suffix": "",
+    "is_transfer_index_settings_from_source_index": false,
+    "is_continue_on_failure" : true,
+    "number_of_concurrent_processed_indices" : 1,
+    "total_number_of_threads" : 1,
+    "reindex_algorithms" : [
+      {
+        "reindex_algorithm_name" : "Time oriented",
+        "is_checked" : true,
+        "algorithm_params" :[
+          {
+            "label" : "Date field",
+            "field_type" : "input",
+            "default_value" : "@timestamp",
+            "actual_value" : "@timestamp"
+          },
+          {
+            "label" : "Time chunk",
+            "field_type" : "input",
+            "default_value" : "10m",
+            "actual_value" : "10m"
+          }
+        ]
+      }
+    ]
+  }
+}

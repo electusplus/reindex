@@ -1,0 +1,100 @@
+{
+  "project_name": "Test",
+  "project_id": "1fbd913f6d854fe48567faa30c097bfc",
+  "connection_settings": {
+    "source": {
+      "es_host": "http://localhost:9200",
+      "authentication_enabled": false,
+      "username": null,
+      "password": null,
+      "ssl_enabled": false,
+      "ssl_file": null,
+      "status": "UNTESTED"
+    },
+    "destination": {
+      "es_host": "http://localhost:9200",
+      "authentication_enabled": false,
+      "username": null,
+      "password": null,
+      "ssl_enabled": false,
+      "ssl_file": null,
+      "status": "UNTESTED"
+    }
+  },
+  "source_index_list": [
+    {
+      "index_name": "test-nodes_stats-2020-09-09",
+      "is_checked": true
+    },
+    {
+      "index_name": "test-nodes_stats-2020-09-08",
+      "is_checked": false
+    },
+    {
+      "index_name": "test-nodes_stats-2020-09-07",
+      "is_checked": false
+    }
+  ],
+  "source_template_list": [
+    {
+      "template_name": ".ml-config",
+      "is_checked": false
+    },
+    {
+      "template_name": ".data-frame-notifications-1",
+      "is_checked": false
+    },
+    {
+      "template_name": "metricbeat-7.4.0",
+      "is_checked": false
+    }
+  ],
+  "reindex_settings": {
+    "is_merge_to_one_index": false,
+    "merge_to_one_index_index_name": "",
+    "is_send_to_alias": false,
+    "send_to_alias_alias": "",
+    "is_send_to_pipeline": true,
+    "send_to_pipeline_pipeline_name": "ingest_pipeline",
+    "is_add_prefix": false,
+    "add_prefix_prefix": "",
+    "is_add_suffix": false,
+    "add_suffix_suffix": "",
+    "is_transfer_index_settings_from_source_index": false,
+    "is_continue_on_failure": true,
+    "is_use_ilm": false,
+    "is_send_to_rollover_alias": false,
+    "send_to_rollover_alias_alias": "",
+    "is_associate_with_ilm_policy": false,
+    "associate_with_ilm_policy_policy_name": "",
+    "is_create_first_index_of_rollover": false,
+    "create_first_index_of_rollover_index_name": "",
+    "number_of_concurrent_processed_indices": 0,
+    "total_number_of_threads": 0,
+    "reindex_algorithms": [
+      {
+        "reindex_algorithm_name": "Time series",
+        "algorithm_params": [
+          {
+            "label": "Date field",
+            "field_type": "input",
+            "default_value": "@timestamp",
+            "actual_value": "@timestamp"
+          },
+          {
+            "label": "Time chunk",
+            "field_type": "input",
+            "default_value": 60,
+            "actual_value": 60
+          }
+        ],
+        "is_selected": false
+      },
+      {
+        "reindex_algorithm_name": "Whole index",
+        "algorithm_params": [],
+        "is_selected": true
+      }
+    ]
+  }
+}

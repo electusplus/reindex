@@ -1,0 +1,22 @@
+{
+  "project_id": "f0d0aff9e5ba49b1823e2872c0d786ce",
+  "project_name": "test",
+  "status": "WARNING",
+  "validation_results": [
+    {
+      "numericStatus": 0,
+      "validation_param": "pipe",
+      "task": "Check is ingest pipeline 'pipe' exists",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "numericStatus": 1,
+      "validation_param": "b",
+      "task": "Check is index 'b' exists",
+      "status": "WARNING",
+      "notes": "The index already exists"
+    }
+  ],
+  "user_message": "There a number of potential errors in the project./nAre you sure, that you want to continue "
+}
