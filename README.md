@@ -1,7 +1,7 @@
 ## Welcome to reindex application for Elasticsearch
 This application will help you to reindex one or more existing indices, into the local or remote Elasticsearch cluster.
 
-####The reindex destinations:
+###The reindex destinations:
 - Merge multiple indices into one index
 - Reindex to alias
 - Reindex to pipeline
